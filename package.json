@@ -1,0 +1,19 @@
+{
+  "name": "daydream-proxy",
+  "version": "1.0.0",
+  "description": "A browser proxy using Ultraviolet + WISP",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
+    "@mercuryworkshop/bare-mux": "^2.0.5",
+    "@mercuryworkshop/epoxy-transport": "^2.1.3",
+    "@mercuryworkshop/wisp-server-node": "^1.0.7",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^3.0.0"
+  }
+}

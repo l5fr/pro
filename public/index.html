@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DaydreamX</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d12;
+      --surface: #16161e;
+      --surface2: #1e1e28;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e8e8f0;
+      --text2: #888899;
+      --accent: #7c6af7;
+      --accent2: #9d8fff;
+      --tab-h: 38px;
+      --toolbar-h: 48px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow: hidden; }
+
+    /* ── Tab bar ── */
+    #tab-bar {
+      display: flex;
+      align-items: flex-end;
+      height: var(--tab-h);
+      background: var(--bg);
+      padding: 0 6px;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--border);
+    }
+    #tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 120px;
+      max-width: 200px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px 8px 0 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .tab.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .tab .fav { font-size: 13px; flex-shrink: 0; }
+    .tab .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab .x { opacity: 0; font-size: 15px; color: var(--text2); line-height: 1; padding: 2px 0 2px 4px; transition: opacity 0.1s; flex-shrink: 0; }
+    .tab:hover .x { opacity: 1; }
+    .tab .x:hover { color: #ff6b6b; }
+
+    #new-tab-btn {
+      width: 30px; height: 30px; border-radius: 6px;
+      background: none; border: none; color: var(--text2);
+      font-size: 20px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      flex-shrink: 0; margin-bottom: 2px;
+      transition: background 0.1s, color 0.1s;
+    }
+    #new-tab-btn:hover { background: var(--surface); color: var(--text); }
+
+    /* ── Toolbar ── */
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: var(--toolbar-h);
+      padding: 0 10px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      width: 30px; height: 30px; border-radius: 6px;
+      background: none; border: 1px solid transparent;
+      color: var(--text2); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.1s; flex-shrink: 0;
+    }
+    .nav-btn:hover:not(:disabled) { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #url-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0 14px;
+      height: 34px;
+      gap: 8px;
+      transition: border-color 0.15s;
+    }
+    #url-wrap:focus-within { border-color: var(--accent); }
+    #lock { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+    #url-bar {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-size: 13px;
+    }
+    #url-bar::placeholder { color: var(--text2); }
+
+    #go-btn {
+      height: 30px; padding: 0 14px; border-radius: 14px;
+      background: var(--accent); border: none;
+      color: #fff; font-size: 13px; font-weight: 500;
+      cursor: pointer; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    #go-btn:hover { background: var(--accent2); }
+
+    /* ── Content area ── */
+    #content {
+      position: relative;
+      height: calc(100vh - var(--tab-h) - var(--toolbar-h) - 26px);
+    }
+
+    iframe#proxy-frame {
+      width: 100%; height: 100%;
+      border: none;
+      background: #fff;
+      display: none;
+    }
+
+    /* ── Home screen ── */
+    #home {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 28px;
+      padding: 2rem;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-icon {
+      font-size: 52px;
+      filter: drop-shadow(0 0 24px rgba(124, 106, 247, 0.6));
+    }
+    .logo h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #a78fff, #7c6af7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo p { font-size: 14px; color: var(--text2); }
+
+    #search-box {
+      display: flex;
+      width: 100%;
+      max-width: 500px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    #search-box:focus-within { border-color: var(--accent); }
+    #home-input {
+      flex: 1; padding: 12px 20px;
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 15px;
+    }
+    #home-input::placeholder { color: var(--text2); }
+    #search-btn {
+      padding: 0 20px; background: var(--accent);
+      border: none; color: #fff; font-size: 15px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #search-btn:hover { background: var(--accent2); }
+
+    .quicklinks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-width: 500px;
+    }
+    .ql {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      min-width: 80px;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .ql:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-2px); }
+    .ql-icon { font-size: 22px; }
+    .ql-label { font-size: 11px; color: var(--text2); }
+
+    /* ── Status bar ── */
+    #status-bar {
+      height: 26px; line-height: 26px;
+      padding: 0 12px;
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Loading overlay ── */
+    #loading {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      animation: load 1.5s ease-in-out infinite;
+    }
+    @keyframes load {
+      0% { transform: scaleX(0); transform-origin: left; }
+      50% { transform: scaleX(1); transform-origin: left; }
+      51% { transform: scaleX(1); transform-origin: right; }
+      100% { transform: scaleX(0); transform-origin: right; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="tab-bar">
+  <div class="tab active" data-id="0">
+    <span class="fav">🌙</span>
+    <span class="tab-title">New Tab</span>
+    <span class="x" onclick="closeTab(0,event)">×</span>
+  </div>
+  <button id="new-tab-btn" onclick="newTab()">+</button>
+</div>
+
+<div id="toolbar">
+  <button class="nav-btn" id="back-btn" onclick="goBack()" disabled title="Back">&#8592;</button>
+  <button class="nav-btn" id="fwd-btn"  onclick="goFwd()"  disabled title="Forward">&#8594;</button>
+  <button class="nav-btn" id="reload-btn" onclick="reload()" title="Reload">&#8635;</button>
+  <div id="url-wrap">
+    <span id="lock">🔒</span>
+    <input id="url-bar" type="text" placeholder="Search or enter URL..." autocomplete="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter')navigate()" />
+  </div>
+  <button id="go-btn" onclick="navigate()">Go</button>
+</div>
+
+<div id="content">
+  <div id="loading"></div>
+
+  <div id="home">
+    <div class="logo">
+      <div class="logo-icon">🌙</div>
+      <h1>DaydreamX</h1>
+      <p>Your browser, inside your browser.</p>
+    </div>
+
+    <div id="search-box">
+      <input id="home-input" type="text" placeholder="Search Google or enter a URL..."
+        onkeydown="if(event.key==='Enter')navigateTo(this.value)" autocomplete="off" />
+      <button id="search-btn" onclick="navigateTo(document.getElementById('home-input').value)">&#8594;</button>
+    </div>
+
+    <div class="quicklinks">
+      <a class="ql" onclick="navigateTo('https://www.youtube.com')">
+        <span class="ql-icon">▶️</span><span class="ql-label">YouTube</span>
+      </a>
+      <a class="ql" onclick="navigateTo('https://www.google.com')">
+        <span class="ql-icon">🔍</span><span class="ql-label">Google</span>
+      </a>
+      <a class="ql" onclick="navigateTo('https://www.reddit.com')">
+        <span class="ql-icon">💬</span><span class="ql-label">Reddit</span>
+      </a>
+      <a class="ql" onclick="navigateTo('https://www.twitch.tv')">
+        <span class="ql-icon">🎮</span><span class="ql-label">Twitch</span>
+      </a>
+      <a class="ql" onclick="navigateTo('https://discord.com/app')">
+        <span class="ql-icon">🎧</span><span class="ql-label">Discord</span>
+      </a>
+      <a class="ql" onclick="navigateTo('https://www.wikipedia.org')">
+        <span class="ql-icon">📖</span><span class="ql-label">Wikipedia</span>
+      </a>
+    </div>
+  </div>
+
+  <iframe id="proxy-frame" allow="fullscreen; autoplay; encrypted-media"></iframe>
+</div>
+
+<div id="status-bar">Ready</div>
+
+<!-- Register UV service worker -->
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv/uv.config.js"></script>
+<script src="/uv.config.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let tabs = [{ id: 0, title: 'New Tab', url: '', fav: '🌙', hist: [], histIdx: -1 }];
+let active = 0;
+let counter = 1;
+
+// ── Service Worker ─────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/uv/uv.sw.js', { scope: '/service/' })
+    .then(() => console.log('[SW] Ultraviolet registered'))
+    .catch(e => console.warn('[SW] Registration failed:', e));
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function getTab(id) { return tabs.find(t => t.id === id); }
+function setStatus(msg) { document.getElementById('status-bar').textContent = msg; }
+function setLoading(on) { document.getElementById('loading').style.display = on ? 'block' : 'none'; }
+
+function normalize(input) {
+  input = input.trim();
+  if (!input) return null;
+  if (/^https?:\/\//i.test(input)) return input;
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(input) && !input.includes(' ')) return 'https://' + input;
+  return 'https://www.google.com/search?q=' + encodeURIComponent(input);
+}
+
+function toProxy(url) {
+  return '/service/' + __uv$config.encodeUrl(url);
+}
+
+// ── Tab rendering ──────────────────────────────────────────────────────────
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  const btn = document.getElementById('new-tab-btn');
+  bar.querySelectorAll('.tab').forEach(e => e.remove());
+  tabs.forEach(tab => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (tab.id === active ? ' active' : '');
+    el.dataset.id = tab.id;
+    el.innerHTML = `<span class="fav">${tab.fav}</span><span class="tab-title">${tab.title}</span><span class="x" onclick="closeTab(${tab.id},event)">×</span>`;
+    el.addEventListener('click', e => { if (!e.target.classList.contains('x')) switchTab(tab.id); });
+    bar.insertBefore(el, btn);
+  });
+}
+
+// ── Tab actions ────────────────────────────────────────────────────────────
+function switchTab(id) {
+  active = id;
+  const tab = getTab(id);
+  document.getElementById('url-bar').value = tab.url || '';
+  updateNavBtns();
+  if (tab.url) showProxy(tab.url);
+  else showHome();
+  renderTabs();
+}
+
+function newTab() {
+  const id = counter++;
+  tabs.push({ id, title: 'New Tab', url: '', fav: '🌙', hist: [], histIdx: -1 });
+  switchTab(id);
+}
+
+function closeTab(id, e) {
+  e.stopPropagation();
+  if (tabs.length === 1) { newTab(); }
+  tabs = tabs.filter(t => t.id !== id);
+  if (active === id) switchTab(tabs[tabs.length - 1].id);
+  else renderTabs();
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function navigateTo(raw) {
+  const url = normalize(raw);
+  if (!url) return;
+  const tab = getTab(active);
+  tab.url = url;
+  try { tab.title = new URL(url).hostname.replace('www.','') || 'Loading'; } catch { tab.title = 'Loading'; }
+  tab.fav = '🌐';
+  tab.hist = tab.hist.slice(0, tab.histIdx + 1);
+  tab.hist.push(url);
+  tab.histIdx = tab.hist.length - 1;
+  document.getElementById('url-bar').value = url;
+  updateNavBtns();
+  renderTabs();
+  showProxy(url);
+}
+
+function navigate() { navigateTo(document.getElementById('url-bar').value); }
+
+function goBack() {
+  const tab = getTab(active);
+  if (tab.histIdx > 0) { tab.histIdx--; loadFromHist(tab); }
+}
+function goFwd() {
+  const tab = getTab(active);
+  if (tab.histIdx < tab.hist.length - 1) { tab.histIdx++; loadFromHist(tab); }
+}
+function loadFromHist(tab) {
+  tab.url = tab.hist[tab.histIdx];
+  document.getElementById('url-bar').value = tab.url;
+  updateNavBtns();
+  showProxy(tab.url);
+}
+function reload() {
+  const tab = getTab(active);
+  if (tab.url) showProxy(tab.url);
+}
+
+function updateNavBtns() {
+  const tab = getTab(active);
+  document.getElementById('back-btn').disabled = tab.histIdx <= 0;
+  document.getElementById('fwd-btn').disabled = tab.histIdx >= tab.hist.length - 1;
+}
+
+// ── Show / hide ────────────────────────────────────────────────────────────
+function showHome() {
+  document.getElementById('home').style.display = 'flex';
+  document.getElementById('proxy-frame').style.display = 'none';
+  setLoading(false);
+  setStatus('Ready');
+}
+
+function showProxy(url) {
+  document.getElementById('home').style.display = 'none';
+  const frame = document.getElementById('proxy-frame');
+  frame.style.display = 'block';
+  setLoading(true);
+  setStatus('Loading ' + url + '...');
+  frame.src = toProxy(url);
+  frame.onload = () => { setLoading(false); setStatus(url); };
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderTabs();
+</script>
+</body>
+</html>
